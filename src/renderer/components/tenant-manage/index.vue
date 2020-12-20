@@ -11,9 +11,10 @@
         <el-table-column
         
         label="操作"
-        width="200">
+        width="250">
         <template v-slot="{ $index, row }" >
             <el-button @click="onEdit(row)" type="primary" size="small">编辑</el-button>
+            <el-button @click="onInit(row)" type="primary" size="small" :loading="row._loading2">初始化</el-button>
             <!-- <el-button @click="onDelete(row)" type="text" size="small">删除</el-button> -->
             <confirm-button
               type="delete"
@@ -55,6 +56,7 @@ import EditPanl from "./edit/index";
 import AddPanl from "./add/index";
 import { getTenantList,deleteTenant } from './../../api/config';
 import ConfirmButton from "../confirm-button";
+import { initDb } from '../../api/tool';
 export default {
     name: "teanant-manage--config--index",
     components: { AddPanl,EditPanl, ConfirmButton},
@@ -84,8 +86,10 @@ export default {
     methods: {
         async getTenantList(displaySuccessMsg){
             this.loading=true;
+            this.loading2=true;
             var res= await getTenantList();
             this.loading=false;
+            this.loading2=false;
             if (!res.success && res.message) {
                 this.$message({ message: res.message, type: "error" });
                 return;
@@ -124,7 +128,14 @@ export default {
                 this.getTenantList(false);
             } 
         },
-     
+        async onInit(row) {
+            row._loading2 = true;
+            var rowd = cloneDeep(row);
+            const para = { TenantID: rowd.id, DbType: rowd.dbOptions[0].dbType, ConnectionString: rowd.dbOptions[0].connectionStrings[0].connectionString}
+            console.log(para)
+            const res = await initDb(para);
+            row._loading2 = false;
+        },
         // -- add 事件 start --
         onAdd() {
             this.addVisible = true;
